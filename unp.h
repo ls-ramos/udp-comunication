@@ -11,7 +11,7 @@
 #define SERV_PORT 8889
 #define LISTENQ 3
 #define BD_NAME "people.txt"
-#define MAX_PEOPLE_ANSWER 100
+#define MAX_PEOPLE_ANSWER 10
 
 // operationCode
 #define ADD_PERSON 1
@@ -29,7 +29,7 @@
 #define ERROR -1
 
 #define MAX_INPUT 100
-#define MAXLINE 1000
+#define MAXLINE 2000
 
 typedef struct {
    char *email;
