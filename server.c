@@ -304,7 +304,7 @@ void dg_echo(int sockfd, struct sockaddr *pcliaddr, socklen_t clilen){
         // sleep(7);
 
         serializeMessage(rawAns, &request);
-        printf("Answering");
+        puts("Answering to client");
         sendto(sockfd, rawAns, n, 0, pcliaddr, len);
     }
 }
