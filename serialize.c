@@ -361,6 +361,17 @@ int comparePerson(Person* p1, Person* p2){
    return 1;
 }
 
+void freeMessage(Message* m){
+   if(m->peopleCount>0) freePeople(m->peopleData, m->peopleCount);
+   free(m);
+}
+
+void freePeople(Person* p, int peopleCount){
+   for (int i = 0; i < peopleCount; i++){
+      freePerson(&p[i]);
+   }
+}
+
 void freePerson(Person* p){
    free(p->email);
    free(p->name);
@@ -375,9 +386,10 @@ void freePerson(Person* p){
    for (int i = 0; i < p->sizeExperiences; i++){
       free(p->experiences[i]);   
    }
-
-   free(p->skills);
-   free(p->experiences);
+   
+   if(p->sizeSkills > 0) free(p->skills);
+   if(p->sizeExperiences > 0) free(p->experiences);
+   
    free(p);
 }
 

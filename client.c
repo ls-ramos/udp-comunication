@@ -3,15 +3,15 @@
 int getUDPSocket(char *serverIP, struct sockaddr_in *servaddrReturn);
 void clientUDPLoop();
 void addPersonUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen);
-void addExperienceUDP(int sock_fd);
-void getAllPeopleWithGraduationUDP(int sock_fd);
-void getAllPeopleWithSkillUDP(int sock_fd);
-void getAllPeopleWithGraduationYearUDP(int sock_fd);
-void getAllPeopleUDP(int sock_fd);
-void getPersonUDP(int sock_fd);
-void removePersonUDP(int sock_fd);
+void addExperienceUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen);
+void getAllPeopleWithGraduationUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen);
+void getAllPeopleWithSkillUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen);
+void getAllPeopleWithGraduationYearUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen);
+void getAllPeopleUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen);
+void getPersonUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen);
+void removePersonUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen);
 
-int sendToServer(char *sendline, char* recvline, int sockfd, const struct sockaddr *pservaddr,socklen_t servlen);
+int sendToServer(Message *request, char* recvline, int sockfd, const struct sockaddr *pservaddr,socklen_t servlen);
 
 int getOperationFromUser();
 int getAdmin();
@@ -117,7 +117,7 @@ int getAdmin(){
     return isAdmin;
 }
 
-int sendToServer(char *request, char* recvline, int sockfd, const struct sockaddr *pservaddr,socklen_t servlen){
+int sendToServer(Message *request, char* recvline, int sockfd, const struct sockaddr *pservaddr,socklen_t servlen){
     char sendline[MAXLINE];
 
     int n, selRes;
@@ -135,7 +135,7 @@ int sendToServer(char *request, char* recvline, int sockfd, const struct sockadd
 
     if(selRes > 0){
         printf("Reading answer!\n");
-        n = recvfrom (sockfd, recvline, MAXLINE, 0, NULL, NULL);
+        n = recvfrom(sockfd, recvline, MAXLINE, 0, NULL, NULL);
         recvline[n] = '\0'; /* null terminate */
         return 0;
     }else if(selRes == 0){
@@ -182,25 +182,25 @@ void clientUDPLoop(int sock_fd, const struct sockaddr *pservaddr,socklen_t servl
                 addPersonUDP(sock_fd, pservaddr, servlen);
                 break;
             case ADD_EXPERIENCE:
-                addExperienceUDP(sock_fd);
+                addExperienceUDP(sock_fd, pservaddr, servlen);
                 break;
             case GET_ALL_PER_GRADUATION:
-                getAllPeopleWithGraduationUDP(sock_fd);
+                getAllPeopleWithGraduationUDP(sock_fd, pservaddr, servlen);
                 break;
             case GET_ALL_PER_SKILL:
-                getAllPeopleWithSkillUDP(sock_fd);
+                getAllPeopleWithSkillUDP(sock_fd, pservaddr, servlen);
                 break;
             case GET_ALL_PER_YEAR:
-                getAllPeopleWithGraduationYearUDP(sock_fd);
+                getAllPeopleWithGraduationYearUDP(sock_fd, pservaddr, servlen);
                 break;
             case GET_ALL:
-                getAllPeopleUDP(sock_fd);
+                getAllPeopleUDP(sock_fd, pservaddr, servlen);
                 break;
             case GET_PERSON:
-                getPersonUDP(sock_fd);
+                getPersonUDP(sock_fd, pservaddr, servlen);
                 break;
             case REMOVE_PERSON:
-                removePersonUDP(sock_fd);
+                removePersonUDP(sock_fd, pservaddr, servlen);
                 break;
             default:
                 break;
@@ -264,7 +264,7 @@ void addPersonUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servle
     }
 }
 
-void addExperienceUDP(int sock_fd){
+void addExperienceUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen){
 
     char *email = malloc(MAX_INPUT*sizeof(char));
     char *expirence = malloc(MAX_INPUT*sizeof(char));
@@ -286,33 +286,54 @@ void addExperienceUDP(int sock_fd){
     // free(request);
 }
 
-void getAllPeopleWithGraduationUDP(int sock_fd){
-    // Message *request = malloc(sizeof (Message));
-    // Message *answer = malloc(sizeof (Message));
-    // request->operationCode = GET_ALL_PER_GRADUATION;
+void getAllPeopleWithGraduationUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen){
+    char rawRequest[MAXLINE];
+    char rawAnswer[MAXLINE+1];
 
-    char *graduation = malloc(MAX_INPUT*sizeof(char));
+    Message *request = malloc(sizeof(Message));
+    Message *answer = malloc(sizeof(Message));
 
-    printf("Enter the graduation year: ");
-    fgets(graduation, MAX_INPUT, stdin);
+    request->operationCode = GET_ALL_PER_GRADUATION;
+    request->statusCode = 0;
+    request->peopleCount = 1; 
+    request->peopleData = malloc(sizeof(Person));
 
-    // puts("Sending message");    
-    // write(sock_fd, request, sizeof (Message));
-    
-    // puts("----------- Starting answer ----------------\n");
-    // do{
-    //     read(sock_fd, answer, sizeof (Message));
-    //     printPerson(answer->personData);
-    //     printf("******************************\n");
-    // }while(answer->statusCode == SENDING);
-    // printf("Operation: %d Status: %d\n",answer->operationCode,answer->statusCode);
-    // puts("----------- End answer ---------------------\n");
+    request->peopleData[0].email = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].email, "");
+    request->peopleData[0].name = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].name, "");
+    request->peopleData[0].lastName = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].lastName, "");
+    request->peopleData[0].residence = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].residence, "");
+    request->peopleData[0].graduation = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].graduation, "");
+    request->peopleData[0].sizeSkills = 0;
+    request->peopleData[0].sizeExperiences = 0;
+    request->peopleData[0].graduationYear = 0;
 
-    // free(answer);
-    // free(request);
+    printf("Enter the graduation: ");
+    fgets(request->peopleData[0].graduation, MAX_INPUT, stdin);    
+
+    int error = sendToServer(request, rawAnswer, sock_fd, pservaddr, servlen);
+    if(error == 0){
+        deserializeMessage(rawAnswer, answer);
+
+        puts("----------- Operation GET_ALL_PER_GRADUATION ----------------\n"); 
+        for (int i = 0; i < answer->peopleCount; i++){
+            printf("************ Person %d ***************\n", i);
+            printPerson(&answer->peopleData[i]);
+            printf("********** End Person %d *************\n\n", i);
+        }
+        puts("------------------- End answer ------------------\n");
+    }else{
+        puts("----------- Operation GET_ALL_PER_GRADUATION ----------------\n"); 
+        printf("Error or timeout\n");
+        puts("------------------- End answer ------------------\n");
+    }
 }
 
-void getAllPeopleWithSkillUDP(int sock_fd){
+void getAllPeopleWithSkillUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen){
     // Message *request = malloc(sizeof (Message));
     // Message *answer = malloc(sizeof (Message));
     // request->operationCode = GET_ALL_PER_SKILL;
@@ -338,103 +359,199 @@ void getAllPeopleWithSkillUDP(int sock_fd){
     // free(request);
 }
 
-void getAllPeopleWithGraduationYearUDP(int sock_fd){
-    // Message *request = malloc(sizeof (Message));
-    // Message *answer = malloc(sizeof (Message));
-    // request->operationCode = GET_ALL_PER_YEAR;
+void getAllPeopleWithGraduationYearUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen){
 
     char *graduationYearString = malloc(MAX_INPUT*sizeof(char));
     int graduationYear;
 
+    char rawRequest[MAXLINE];
+    char rawAnswer[MAXLINE+1];
+
+    Message *request = malloc(sizeof(Message));
+    Message *answer = malloc(sizeof(Message));
+
+    request->operationCode = GET_ALL_PER_YEAR;
+    request->statusCode = 0;
+    request->peopleCount = 1; 
+    request->peopleData = malloc(sizeof(Person));
+
+    request->peopleData[0].email = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].email, "");
+    request->peopleData[0].name = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].name, "");
+    request->peopleData[0].lastName = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].lastName, "");
+    request->peopleData[0].residence = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].residence, "");
+    request->peopleData[0].graduation = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].graduation, "");
+    request->peopleData[0].sizeSkills = 0;
+    request->peopleData[0].sizeExperiences = 0;
+    request->peopleData[0].graduationYear = 0;
+
     printf("Enter the graduation year: ");
     fgets(graduationYearString, MAX_INPUT, stdin);
     graduationYear = atoi(graduationYearString);
+    request->peopleData[0].graduationYear = graduationYear;
 
-    // puts("Sending message");    
-    // write(sock_fd, request, sizeof (Message));
+    int error = sendToServer(request, rawAnswer, sock_fd, pservaddr, servlen);
+    if(error == 0){
+        deserializeMessage(rawAnswer, answer);
+
+        puts("----------- Operation GET_ALL_PER_YEAR ----------------\n"); 
+        for (int i = 0; i < answer->peopleCount; i++){
+            printf("************ Person %d ***************\n", i);
+            printPerson(&answer->peopleData[i]);
+            printf("********** End Person %d *************\n\n", i);
+        }
+        puts("------------------- End answer ------------------\n");
+    }else{
+        puts("----------- Operation GET_ALL_PER_YEAR ----------------\n"); 
+        printf("Error or timeout\n");
+        puts("------------------- End answer ------------------\n");
+    }
+
     
-    // puts("----------- Starting answer ----------------\n");
-    // do{
-    //     read(sock_fd, answer, sizeof (Message));
-    //     printPerson(answer->personData);
-    //     printf("******************************\n");
-    // }while(answer->statusCode == SENDING);
-    // printf("Operation: %d Status: %d\n",answer->operationCode,answer->statusCode);
-    // puts("----------- End answer ---------------------\n");
-
-    // free(answer);
-    // free(request);
 }
 
-void getAllPeopleUDP(int sock_fd){
-    // Message *request = malloc(sizeof (Message));
-    // Message *answer = malloc(sizeof (Message));
+void getAllPeopleUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen){
+    char rawRequest[MAXLINE];
+    char rawAnswer[MAXLINE+1];
 
-    // request->operationCode = GET_ALL;
+    Message *request = malloc(sizeof(Message));
+    Message *answer = malloc(sizeof(Message));
 
-    // puts("Sending message");    
-    // write(sock_fd, request, sizeof (Message));
-    
-    // puts("----------- Starting answer ----------------\n");
-    // do{
-    //     read(sock_fd, answer, sizeof (Message));
-    //     printPerson(answer->personData);
-    //     printf("******************************\n");
-    // }while(answer->statusCode == SENDING);
-    // printf("Operation: %d Status: %d\n",answer->operationCode,answer->statusCode);
-    // puts("----------- End answer ---------------------\n");
-    
-    // free(answer);
-    // free(request);
+    request->operationCode = GET_ALL;
+    request->statusCode = 0;
+    request->peopleCount = 0; 
+
+    int error = sendToServer(request, rawAnswer, sock_fd, pservaddr, servlen);
+    if(error == 0){
+        deserializeMessage(rawAnswer, answer);
+
+        puts("----------- Operation GET_ALL_PEOPLE ----------------\n"); 
+        for (int i = 0; i < answer->peopleCount; i++){
+            printf("************ Person %d ***************\n", i);
+            printPerson(&answer->peopleData[i]);
+            printf("********** End Person %d *************\n\n", i);
+        }
+        
+        puts("------------------- End answer ------------------\n");
+    }else{
+        puts("----------- Operation GET_ALL_PEOPLE ----------------\n"); 
+        printf("Error or timeout\n");
+        puts("------------------- End answer ------------------\n");
+    }
 }
 
-void getPersonUDP(int sock_fd){
+void getPersonUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen){
+    char rawRequest[MAXLINE];
+    char rawAnswer[MAXLINE+1];
 
-    // Message *request = malloc(sizeof (Message));
-    // Message *answer = malloc(sizeof (Message));
-    // request->operationCode = GET_PERSON;
-    
-    char *email = malloc(MAX_INPUT*sizeof(char));
+    Message *request = malloc(sizeof(Message));
+    Message *answer = malloc(sizeof(Message));
+
+    request->operationCode = GET_PERSON;
+    request->statusCode = 0;
+    request->peopleCount = 1; 
+    request->peopleData = malloc(sizeof(Person));
+
+    request->peopleData[0].email = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].email, "");
+    request->peopleData[0].name = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].name, "");
+    request->peopleData[0].lastName = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].lastName, "");
+    request->peopleData[0].residence = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].residence, "");
+    request->peopleData[0].graduation = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].graduation, "");
+    request->peopleData[0].sizeSkills = 0;
+    request->peopleData[0].sizeExperiences = 0;
+    request->peopleData[0].graduationYear = 0;
 
     printf("Enter the email: ");
-    fgets(email, MAX_INPUT, stdin);
+    fgets(request->peopleData[0].email, MAX_INPUT, stdin);
 
+    int error = sendToServer(request, rawAnswer, sock_fd, pservaddr, servlen);
+    if(error == 0){
+        deserializeMessage(rawAnswer, answer);
 
-    // puts("Sending message");    
-    // write(sock_fd, request, sizeof (Message));
-    
-    // puts("----------- Starting answer ----------------\n");
-    // do{
-    //     read(sock_fd, answer, sizeof (Message));
-    //     if(answer->statusCode != ERROR){
-    //         printPerson(answer->personData);
-    //         printf("******************************\n");
-    //     }
-    // }while(answer->statusCode == SENDING);
-    // printf("Operation: %d Status: %d\n",answer->operationCode,answer->statusCode);
-    // puts("----------- End answer ---------------------\n");
-
-    // free(answer);
-    // free(request);
+        puts("----------- Operation GET_PERSON ----------------\n"); 
+        for (int i = 0; i < answer->peopleCount; i++){
+            printf("************ Person %d ***************\n", i);
+            printPerson(&answer->peopleData[i]);
+            printf("********** End Person %d *************\n\n", i);
+        }
+        puts("------------------- End answer ------------------\n");
+    }else{
+        puts("----------- Operation GET_PERSON ----------------\n"); 
+        printf("Error or timeout\n");
+        puts("------------------- End answer ------------------\n");
+    }
 }
 
-void removePersonUDP(int sock_fd){
-    // Message *request = malloc(sizeof (Message));
-    // Message *answer = malloc(sizeof (Message));
-    // request->operationCode = REMOVE_PERSON;
-    
-    char *email = malloc(MAX_INPUT*sizeof(char));
+void removePersonUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servlen){
+   char rawRequest[MAXLINE];
+    char rawAnswer[MAXLINE+1];
+
+    Message *request = malloc(sizeof(Message));
+    Message *answer = malloc(sizeof(Message));
+
+    request->operationCode = REMOVE_PERSON;
+    request->statusCode = 0;
+    request->peopleCount = 1; 
+    request->peopleData = malloc(sizeof(Person));
+
+    request->peopleData[0].email = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].email, "");
+    request->peopleData[0].name = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].name, "");
+    request->peopleData[0].lastName = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].lastName, "");
+    request->peopleData[0].residence = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].residence, "");
+    request->peopleData[0].graduation = malloc(MAX_INPUT*sizeof(char));
+    stpcpy(request->peopleData[0].graduation, "");
+    request->peopleData[0].sizeSkills = 0;
+    request->peopleData[0].sizeExperiences = 0;
+    request->peopleData[0].graduationYear = 0;
 
     printf("Enter the email: ");
-    fgets(email, MAX_INPUT, stdin);
+    fgets(request->peopleData[0].email, MAX_INPUT, stdin);
 
-    // puts("Sending message");
-    // write(sock_fd, request, sizeof (Message));
-    // read(sock_fd, answer, sizeof (Message));
-    // puts("----------- Starting answer ----------------\n"); 
-    // printf("Operation: %d Status: %d\n", answer->operationCode, answer->statusCode);
-    // puts("----------- End answer ---------------------\n");
+    int error = sendToServer(request, rawAnswer, sock_fd, pservaddr, servlen);
+    if(error == 0){
+        deserializeMessage(rawAnswer, answer);
 
-    // free(answer);
-    // free(request);
+        puts("----------- Operation REMOVE_PERSON ----------------\n"); 
+        printf("Status: %d", answer->statusCode);
+        puts("------------------- End answer ------------------\n");
+    }else{
+        puts("----------- Operation REMOVE_PERSON ----------------\n"); 
+        printf("Error or timeout\n");
+        puts("------------------- End answer ------------------\n");
+    }
+}
+
+
+void printPerson(Person* person){
+    printf("Email: %s\nName:%s\nLastName:%s\nResidence:%s\nGraduation:%s\nGraduationYear:%d\n"
+        ,person->email,person->name,person->lastName,person->residence,person->graduation, person->graduationYear);
+    
+    printf("Skills: ");
+    for(int i=0;i<person->sizeSkills;i++){
+        printf("%s",person->skills[i]);
+        printf(", ");
+        
+    }
+    printf("\n");
+
+    printf("Experience: ");
+    for(int i=0;i<person->sizeExperiences;i++){
+        printf("%s",person->experiences[i]);
+        printf(", ");
+    }
+    printf("\n");
+
 }

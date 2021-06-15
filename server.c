@@ -1,26 +1,45 @@
 #include "serialize.h"
 
 int readPeople(FILE *file, Person *peopleInFile){
-    Person person;
+    char buffer[MAX_PERSON];
+
+    Person* person = malloc(sizeof(Person));
     int peopleCount = 0;
 
-    while(fread(&person, sizeof(Person), 1, file)){
-      peopleInFile[peopleCount] = person;
-      peopleCount++;
-      printf ("Email = %s\n", person.email);
-    }
+    while(fread(buffer, MAX_PERSON, 1, file)){
+        deserializePerson(buffer, person);
 
+        peopleInFile[peopleCount] = person[0];
+        peopleCount++;
+        printf ("Email = %s\n", person->email);
+    }
+    
+    // freePerson(person);
     return peopleCount;
 }
 
-int createNewPerson (Person* newPerson){
+int writePeople(Person* newPeople, int peopleCount, int append){
     FILE *file;
+    if(append == 1){
+        file= fopen (BD_NAME, "a");
+    }else{
+        file= fopen (BD_NAME, "w");
+    }
+    
 
-    file= fopen (BD_NAME, "a");
-    fwrite (newPerson, sizeof(Person), 1, file);
+    for (int i = 0; i < peopleCount; i++){
+        char buffer[MAX_PERSON];
+        serializePerson(buffer,&newPeople[i]);
+        fwrite (buffer, MAX_PERSON, 1, file);    
+    }
+
     fclose (file);
-
     return ALL_DONE;
+}
+
+
+int createNewPerson (Person* newPerson){
+    return writePeople(newPerson, 1, 1);
 }
 
 // int addExperience (Person updatePerson){
@@ -65,7 +84,7 @@ int createNewPerson (Person* newPerson){
 
 int getAllPeopleWithGraduation(char *graduation, Person *peopleResult){
     FILE *file;
-    Person person;
+
     Person *peopleAux = malloc( MAX_PEOPLE_ANSWER * sizeof (Person));
     int peopleCountAux;
 
@@ -81,7 +100,7 @@ int getAllPeopleWithGraduation(char *graduation, Person *peopleResult){
         }
     }
     
-    free(peopleAux);
+    // freePeople(peopleAux,peopleCountAux);
     return peopleCountResult;
 }
 
@@ -112,7 +131,7 @@ int getAllPeopleWithGraduation(char *graduation, Person *peopleResult){
 
 int getAllPeopleWithGraduationYear(int graduationYear, Person *peopleResult){
     FILE *file;
-    Person person;
+
     Person *peopleAux = malloc( MAX_PEOPLE_ANSWER * sizeof (Person));
     int peopleCountAux;
 
@@ -128,13 +147,13 @@ int getAllPeopleWithGraduationYear(int graduationYear, Person *peopleResult){
         }
     }
     
-    free(peopleAux);
+    // freePeople(peopleAux,peopleCountAux);
     return peopleCountResult;
 }
 
 int getAllPeople(Person *peopleResult){
     FILE *file;
-    Person person;
+
     int peopleCount;
 
     file= fopen (BD_NAME, "r");
@@ -146,7 +165,7 @@ int getAllPeople(Person *peopleResult){
 
 int getPerson(char *email, Person *peopleResult){
     FILE *file;
-    Person person;
+
     Person *peopleAux = malloc( MAX_PEOPLE_ANSWER * sizeof (Person));
     int peopleCountAux;
 
@@ -162,7 +181,7 @@ int getPerson(char *email, Person *peopleResult){
         }
     }
 
-    free(peopleAux);
+    // freePeople(peopleAux,peopleCountAux);
     return peopleCountResult;
 }
 
@@ -186,12 +205,10 @@ int removePerson(char *email){
     }
 
     // save all back
-    file = fopen(BD_NAME, "w");
-    fwrite(peopleResult, sizeof(Person), peopleCountResult, file);
-    fclose(file);
+    writePeople(peopleResult, peopleCountResult, 0);
 
-    free(peopleAux);
-    free(peopleResult);
+    // freePeople(peopleAux,peopleCountAux);
+    freePeople(peopleResult, peopleCountResult);
     return ALL_DONE;
 }
 
@@ -207,8 +224,7 @@ int handleRequest(Message *request, Person *peopleAnswer, int *countAnswer){
         case GET_ALL_PER_GRADUATION:
             *countAnswer = getAllPeopleWithGraduation(request->peopleData[0].graduation, peopleAnswer);
             if(*countAnswer < 0) return ERROR;
-            else if(*countAnswer <= 1) return ALL_DONE;
-            else return SENDING;
+            else return ALL_DONE;
             break;
         // case GET_ALL_PER_SKILL:
         //     *countAnswer = getAllPeopleWithSkill(request->peopleData[0].skills[0], peopleAnswer);
@@ -219,14 +235,12 @@ int handleRequest(Message *request, Person *peopleAnswer, int *countAnswer){
         case GET_ALL_PER_YEAR:
             *countAnswer = getAllPeopleWithGraduationYear(request->peopleData[0].graduationYear, peopleAnswer);
             if(*countAnswer < 0) return ERROR;
-            else if(*countAnswer <= 1) return ALL_DONE;
-            else return SENDING;
+            else return ALL_DONE;
             break;
         case GET_ALL:
             *countAnswer = getAllPeople(peopleAnswer);
             if(*countAnswer < 0) return ERROR;
-            else if(*countAnswer <= 1) return ALL_DONE;
-            else return SENDING;
+            else return ALL_DONE;
             break;
         case GET_PERSON:
             *countAnswer = getPerson(request->peopleData[0].email, peopleAnswer);
@@ -245,11 +259,18 @@ int handleRequest(Message *request, Person *peopleAnswer, int *countAnswer){
 Message* process(Message* request) {  
     Message *answer = malloc(sizeof (Message));
     Person *peopleAnswer = malloc( MAX_PEOPLE_ANSWER * sizeof (Person)); 
-    int peopleCount;
+    int peopleCount = 0;
 
     answer->statusCode = handleRequest(request, peopleAnswer, &peopleCount);
     answer->operationCode = request->operationCode;
-    // TODO: mount answer
+    answer->peopleCount = peopleCount; 
+
+    if(answer->statusCode != ERROR && answer->peopleCount > 0){
+        answer->peopleData = malloc(sizeof(Person)*answer->peopleCount);
+        for (int i = 0; i < answer->peopleCount; i++){
+            memcpy(&answer->peopleData[i],&peopleAnswer[i],sizeof(Person));
+        }
+    }
     return answer;
 }
 
@@ -267,12 +288,17 @@ void serverLoop(int sockfd, struct sockaddr *pcliaddr, socklen_t clilen){
         n = recvfrom(sockfd, rawMsg, MAXLINE, 0, pcliaddr, &len);
         deserializeMessage(rawMsg,request);
 
+        printf("Request received for operation %d", request->operationCode);
+
         answer = process(request);
         // sleep(7); - to force timeout
 
         serializeMessage(rawAns, answer);
         puts("Answering to client");
-        sendto(sockfd, rawAns, n, 0, pcliaddr, len);
+        sendto(sockfd, rawAns, MAXLINE, 0, pcliaddr, len);
+
+        freeMessage(request);
+        freeMessage(answer);
     }
 }
 

@@ -29,7 +29,8 @@
 #define ERROR -1
 
 #define MAX_INPUT 100
-#define MAXLINE 2000
+#define MAXLINE 3000
+#define MAX_PERSON 1200
 
 typedef struct {
    char *email;

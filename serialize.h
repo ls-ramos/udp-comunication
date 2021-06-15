@@ -22,4 +22,7 @@ void test_serializePerson();
 void test_serializeMessage();
 
 int comparePerson(Person* p1, Person* p2);
+
+void freeMessage(Message* m);
+void freePeople(Person* p, int peopleCount);
 void freePerson(Person* p);
