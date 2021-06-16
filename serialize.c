@@ -78,7 +78,7 @@ int deserializeList(char* buffer, char*** list){
 
 int serializePerson(char* buffer, Person* person){
    int finalPos = 0;
-   char marker;
+
    finalPos += serializeStringItem(&buffer[finalPos], person->email);
    finalPos += serializeStringItem(&buffer[finalPos], person->name);
    finalPos += serializeStringItem(&buffer[finalPos], person->lastName);

@@ -42,45 +42,43 @@ int createNewPerson (Person* newPerson){
     return writePeople(newPerson, 1, 1);
 }
 
-// int addExperience (Person updatePerson){
-//     FILE *file;
-//     Person person;
-//     Person *peopleResult = malloc( MAX_PEOPLE_ANSWER * sizeof (Person));
-//     int peopleCount;
+int addExperience (Person updatePerson){
+    FILE *file;
 
-//     // get all people
-//     file = fopen(BD_NAME, "r");
-//     peopleCount = readPeople(file,peopleResult);
-//     fclose(file);
+    Person *peopleResult = malloc( MAX_PEOPLE_ANSWER * sizeof (Person));
+    int peopleCount;
 
-//     // update specific person
-//     for(int i=0;i<peopleCount;i++){
-//         if(strcmp(peopleResult[i].email, updatePerson.email) == 0){
+    // get all people
+    file = fopen(BD_NAME, "r");
+    peopleCount = readPeople(file,peopleResult);
+    fclose(file);
+
+    // update specific person
+    for(int i=0;i<peopleCount;i++){
+        if(strcmp(peopleResult[i].email, updatePerson.email) == 0){
             
-//             int found = -1;
-//             for(int j=0;j<MAX_LIST;j++){
-//                 if(peopleResult[i].experiences[j][0] == '\0'){
-//                     found = j;
-//                     break;
-//                 }
-//             }
+            int found = -1;
+            for(int j=0;j<peopleResult->sizeExperiences;j++){
+                if(peopleResult[i].experiences[j][0] == '\0'){
+                    found = j;
+                    break;
+                }
+            }
 
-//             if(found >= 0){
-//                 strcpy(peopleResult[i].experiences[found], updatePerson.experiences[0]);
-//             }else{
-//                 return ERROR;
-//             }
-//         }
-//     }
+            if(found >= 0){
+                strcpy(peopleResult[i].experiences[found], updatePerson.experiences[0]);
+            }else{
+                return ERROR;
+            }
+        }
+    }
 
-//     // save all back
-//     file = fopen(BD_NAME, "w");
-//     fwrite(peopleResult, sizeof(Person), peopleCount, file);
-//     fclose(file);
-
-//     free(peopleResult);
-//     return ALL_DONE;
-// }
+    // save all back
+    writePeople(peopleResult,peopleCount,0);
+    
+    free(peopleResult);
+    return ALL_DONE;
+}
 
 int getAllPeopleWithGraduation(char *graduation, Person *peopleResult){
     FILE *file;
@@ -104,30 +102,30 @@ int getAllPeopleWithGraduation(char *graduation, Person *peopleResult){
     return peopleCountResult;
 }
 
-// int getAllPeopleWithSkill(char *skill, Person *peopleResult){
-//     FILE *file;
-//     Person person;
-//     Person *peopleAux = malloc( MAX_PEOPLE_ANSWER * sizeof (Person));
-//     int peopleCountAux;
+int getAllPeopleWithSkill(char *skill, Person *peopleResult){
+    FILE *file;
 
-//     file= fopen (BD_NAME, "r");
-//     peopleCountAux = readPeople(file,peopleAux);
-//     fclose (file);
+    Person *peopleAux = malloc( MAX_PEOPLE_ANSWER * sizeof (Person));
+    int peopleCountAux;
 
-//     int peopleCountResult = 0;
-//     for(int i=0;i<peopleCountAux;i++){
-//         for(int j=0;j<MAX_LIST;j++){
-//             if(strcmp(peopleAux[i].skills[j],skill) == 0){
-//                 peopleResult[peopleCountResult] = peopleAux[i];
-//                 peopleCountResult++;
-//                 break;
-//             }
-//         }
-//     }
+    file= fopen (BD_NAME, "r");
+    peopleCountAux = readPeople(file,peopleAux);
+    fclose (file);
+
+    int peopleCountResult = 0;
+    for(int i=0;i<peopleCountAux;i++){
+        for(int j=0;j<peopleAux->sizeSkills;j++){
+            if(strcmp(peopleAux[i].skills[j],skill) == 0){
+                peopleResult[peopleCountResult] = peopleAux[i];
+                peopleCountResult++;
+                break;
+            }
+        }
+    }
         
-//     free(peopleAux);
-//     return peopleCountResult;
-// }
+    free(peopleAux);
+    return peopleCountResult;
+}
 
 int getAllPeopleWithGraduationYear(int graduationYear, Person *peopleResult){
     FILE *file;
@@ -187,7 +185,7 @@ int getPerson(char *email, Person *peopleResult){
 
 int removePerson(char *email){
     FILE *file;
-    Person person;
+
     Person *peopleAux = malloc( MAX_PEOPLE_ANSWER * sizeof (Person));
     Person *peopleResult = malloc( MAX_PEOPLE_ANSWER * sizeof (Person));
     int peopleCountAux;
@@ -275,7 +273,6 @@ Message* process(Message* request) {
 }
 
 void serverLoop(int sockfd, struct sockaddr *pcliaddr, socklen_t clilen){
-    int n;
     socklen_t len;
     while(1) {
         char rawMsg[MAXLINE];
@@ -285,7 +282,7 @@ void serverLoop(int sockfd, struct sockaddr *pcliaddr, socklen_t clilen){
         Message* answer;
 
         len = clilen;
-        n = recvfrom(sockfd, rawMsg, MAXLINE, 0, pcliaddr, &len);
+        recvfrom(sockfd, rawMsg, MAXLINE, 0, pcliaddr, &len);
         deserializeMessage(rawMsg,request);
 
         printf("Request received for operation %d", request->operationCode);
@@ -302,8 +299,8 @@ void serverLoop(int sockfd, struct sockaddr *pcliaddr, socklen_t clilen){
     }
 }
 
-int main(int argc, char **argv){
-    int sock_fd, new_fd;
+int main(){
+    int sock_fd;
     struct sockaddr_in cliaddr, servaddr;
 
     sock_fd = socket(AF_INET, SOCK_DGRAM, 0);
