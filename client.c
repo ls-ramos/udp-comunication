@@ -27,7 +27,6 @@ int main(int argc, char **argv){
     struct sockaddr_in *servaddr = malloc(sizeof(struct sockaddr_in));
     int socket;
 
-    printf("! Welcome to the UDP comunication demostration !\n");
     socket = getUDPSocket(argv[1], servaddr);
     clientUDPLoop(socket, (struct sockaddr *) servaddr, sizeof(*servaddr));
 
