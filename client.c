@@ -270,7 +270,7 @@ void addExperienceUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t se
         deserializeMessage(rawAnswer, answer);
 
         puts("----------- Operation ADD_EXPERIENCE ----------------\n"); 
-        printf("Status: %d", answer->operationCode);
+        printf("Status: %d\n", answer->operationCode);
         puts("------------------- End answer ------------------\n");
     }else{
         puts("----------- Operation ADD_EXPERIENCE ----------------\n"); 
@@ -553,7 +553,7 @@ void removePersonUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t ser
         deserializeMessage(rawAnswer, answer);
 
         puts("----------- Operation REMOVE_PERSON ----------------\n"); 
-        printf("Status: %d", answer->statusCode);
+        printf("Status: %d\n", answer->statusCode);
         puts("------------------- End answer ------------------\n");
     }else{
         puts("----------- Operation REMOVE_PERSON ----------------\n"); 

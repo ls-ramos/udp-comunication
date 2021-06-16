@@ -33,19 +33,19 @@ int deserializeStringItem(char* buffer, char** string){
 
 int serializeIntItem(char* buffer, int* source){
    int finalPos = 0;
-   
-   memcpy(&buffer[finalPos], source, sizeof(int));
-   finalPos += sizeof(int);
+   int32_t safeSource = htonl(*source);   
+   memcpy(&buffer[finalPos], &safeSource, sizeof(safeSource));
+   finalPos += sizeof(safeSource);
 
    return finalPos;
 }
 
 int deserializeIntItem(char* buffer, int* num){
    int pos=0;
-
-   memcpy(num, buffer, sizeof(int));
-   pos += sizeof(int);
-
+   int32_t safeDest;
+   memcpy(&safeDest, buffer, sizeof(safeDest));
+   pos += sizeof(safeDest);
+   *num = ntohl(safeDest);
    return pos;
 }
 
