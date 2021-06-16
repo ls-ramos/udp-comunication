@@ -370,6 +370,7 @@ void freePeople(Person* p, int peopleCount){
    for (int i = 0; i < peopleCount; i++){
       freePerson(&p[i]);
    }
+   free(p);
 }
 
 void freePerson(Person* p){
@@ -389,7 +390,5 @@ void freePerson(Person* p){
    
    if(p->sizeSkills > 0) free(p->skills);
    if(p->sizeExperiences > 0) free(p->experiences);
-   
-   free(p);
 }
 

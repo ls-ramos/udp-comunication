@@ -56,20 +56,14 @@ int addExperience (Person updatePerson){
     // update specific person
     for(int i=0;i<peopleCount;i++){
         if(strcmp(peopleResult[i].email, updatePerson.email) == 0){
-            
-            int found = -1;
-            for(int j=0;j<peopleResult->sizeExperiences;j++){
-                if(peopleResult[i].experiences[j][0] == '\0'){
-                    found = j;
-                    break;
-                }
-            }
-
-            if(found >= 0){
-                strcpy(peopleResult[i].experiences[found], updatePerson.experiences[0]);
-            }else{
-                return ERROR;
-            }
+            char **newExp = malloc(sizeof(char*)*(peopleResult[i].sizeExperiences + 1));
+            memcpy(newExp, peopleResult[i].experiences, sizeof(char*)*peopleResult[i].sizeExperiences);
+            int expStrSize = strlen(updatePerson.experiences[0]);
+            int newIndex = peopleResult[i].sizeExperiences;
+            newExp[newIndex] = malloc(sizeof(char) * expStrSize);
+            strcpy(newExp[newIndex], updatePerson.experiences[0]);
+            peopleResult[i].experiences = newExp;
+            peopleResult[i].sizeExperiences += 1;
         }
     }
 
@@ -216,20 +210,19 @@ int handleRequest(Message *request, Person *peopleAnswer, int *countAnswer){
         case ADD_PERSON:
             return createNewPerson(&request->peopleData[0]);
             break;
-        // case ADD_EXPERIENCE:
-            // return addExperience(request->peopleData[0]);
-            // break;
+        case ADD_EXPERIENCE:
+            return addExperience(request->peopleData[0]);
+            break;
         case GET_ALL_PER_GRADUATION:
             *countAnswer = getAllPeopleWithGraduation(request->peopleData[0].graduation, peopleAnswer);
             if(*countAnswer < 0) return ERROR;
             else return ALL_DONE;
             break;
-        // case GET_ALL_PER_SKILL:
-        //     *countAnswer = getAllPeopleWithSkill(request->peopleData[0].skills[0], peopleAnswer);
-        //     if(*countAnswer < 0) return ERROR;
-        //     else if(*countAnswer <= 1) return ALL_DONE;
-        //     else return SENDING;
-        //     break;
+        case GET_ALL_PER_SKILL:
+            *countAnswer = getAllPeopleWithSkill(request->peopleData[0].skills[0], peopleAnswer);
+            if(*countAnswer < 0) return ERROR;
+            else return ALL_DONE;
+            break;
         case GET_ALL_PER_YEAR:
             *countAnswer = getAllPeopleWithGraduationYear(request->peopleData[0].graduationYear, peopleAnswer);
             if(*countAnswer < 0) return ERROR;
