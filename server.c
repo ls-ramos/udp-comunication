@@ -13,8 +13,6 @@ int readPeople(FILE *file, Person *peopleInFile){
         peopleCount++;
         printf ("Email = %s\n", person->email);
     }
-    
-    // freePerson(person);
     return peopleCount;
 }
 
@@ -92,7 +90,6 @@ int getAllPeopleWithGraduation(char *graduation, Person *peopleResult){
         }
     }
     
-    // freePeople(peopleAux,peopleCountAux);
     return peopleCountResult;
 }
 
@@ -139,7 +136,6 @@ int getAllPeopleWithGraduationYear(int graduationYear, Person *peopleResult){
         }
     }
     
-    // freePeople(peopleAux,peopleCountAux);
     return peopleCountResult;
 }
 
@@ -173,7 +169,6 @@ int getPerson(char *email, Person *peopleResult){
         }
     }
 
-    // freePeople(peopleAux,peopleCountAux);
     return peopleCountResult;
 }
 
@@ -199,7 +194,6 @@ int removePerson(char *email){
     // save all back
     writePeople(peopleResult, peopleCountResult, 0);
 
-    // freePeople(peopleAux,peopleCountAux);
     freePeople(peopleResult, peopleCountResult);
     return ALL_DONE;
 }

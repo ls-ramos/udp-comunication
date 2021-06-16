@@ -92,7 +92,7 @@ int sendToServer(Message *request, char* recvline, int sockfd, const struct sock
     sendto(sockfd,sendline,size,0,pservaddr,servlen);
     
     struct timeval timeout;    
-    timeout.tv_sec = 1000;
+    timeout.tv_sec = 5;
     timeout.tv_usec = 0;
     selRes = select(sockfd+1, &rset, NULL,NULL,&timeout);
 
