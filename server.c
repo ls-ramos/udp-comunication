@@ -2,16 +2,12 @@
 
 int readPeople(FILE *file, Person *peopleInFile){
     char buffer[MAX_PERSON];
-
-    Person* person = malloc(sizeof(Person));
     int peopleCount = 0;
 
     while(fread(buffer, 1, MAX_PERSON, file)){
-        deserializePerson(buffer, person);
-
-        peopleInFile[peopleCount] = person[0];
+        deserializePerson(buffer, &peopleInFile[peopleCount]);
+        printf ("Email = %s\n", peopleInFile[peopleCount].email);
         peopleCount++;
-        printf ("Email = %s\n", person->email);
     }
     return peopleCount;
 }
@@ -273,13 +269,13 @@ void serverLoop(int sockfd, struct sockaddr *pcliaddr, socklen_t clilen){
         recvfrom(sockfd, rawMsg, MAXLINE, 0, pcliaddr, &len);
         deserializeMessage(rawMsg,request);
 
-        printf("Request received for operation %d", request->operationCode);
+        printf("Request received for operation %d\n", request->operationCode);
 
         answer = process(request);
         // sleep(7); - to force timeout
 
         serializeMessage(rawAns, answer);
-        puts("Answering to client");
+        puts("Answering to client\n");
         sendto(sockfd, rawAns, MAXLINE, 0, pcliaddr, len);
 
         freeMessage(request);

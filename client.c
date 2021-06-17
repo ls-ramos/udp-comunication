@@ -187,7 +187,9 @@ void addPersonUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servle
     request->peopleData[0].lastName = malloc(MAX_INPUT*sizeof(char));
     request->peopleData[0].residence = malloc(MAX_INPUT*sizeof(char));
     request->peopleData[0].graduation = malloc(MAX_INPUT*sizeof(char));
-    request->peopleData[0].sizeSkills = 0;
+    request->peopleData[0].sizeSkills = 1;
+    request->peopleData[0].skills = malloc(sizeof(char*));
+    request->peopleData[0].skills[0] = malloc(MAX_INPUT*sizeof(char));
     request->peopleData[0].sizeExperiences = 0;
     char *graduationYearString = malloc(MAX_INPUT*sizeof(char));
     int graduationYear;
@@ -211,6 +213,9 @@ void addPersonUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t servle
     fgets(graduationYearString, MAX_INPUT, stdin);
     graduationYear = atoi(graduationYearString);
     request->peopleData[0].graduationYear = graduationYear;
+
+    printf("Enter the skill: ");
+    fgets(request->peopleData[0].skills[0], MAX_INPUT, stdin);
 
     int error = sendToServer(request, rawAnswer, sock_fd, pservaddr, servlen);
     if(error == 0){
@@ -269,7 +274,7 @@ void addExperienceUDP(int sock_fd, const struct sockaddr *pservaddr,socklen_t se
         deserializeMessage(rawAnswer, answer);
 
         puts("----------- Operation ADD_EXPERIENCE ----------------\n"); 
-        printf("Status: %d\n", answer->operationCode);
+        printf("Status: %d\n", answer->statusCode);
         puts("------------------- End answer ------------------\n");
     }else{
         puts("----------- Operation ADD_EXPERIENCE ----------------\n"); 
@@ -569,18 +574,15 @@ void printPerson(Person* person){
     printf("Email: %s\nName:%s\nLastName:%s\nResidence:%s\nGraduation:%s\nGraduationYear:%d\n"
         ,person->email,person->name,person->lastName,person->residence,person->graduation, person->graduationYear);
     
-    printf("Skills: ");
+    printf("Skills: \n");
     for(int i=0;i<person->sizeSkills;i++){
-        printf("%s",person->skills[i]);
-        printf(", ");
-        
+        printf(" - %s",person->skills[i]);
     }
     printf("\n");
 
-    printf("Experience: ");
+    printf("Experience: \n");
     for(int i=0;i<person->sizeExperiences;i++){
-        printf("%s",person->experiences[i]);
-        printf(", ");
+        printf(" - %s",person->experiences[i]);
     }
     printf("\n");
 
