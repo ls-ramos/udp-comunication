@@ -25,7 +25,7 @@ int deserializeStringItem(char* buffer, char** string){
    memcpy(&size, &buffer[pos], sizeof(size));
    pos += sizeof(size);
 
-   *string = malloc(sizeof(char)*(size+1)); // +1 because of the \0 in the end
+   *string = malloc(sizeof(char)*(size)); // +1 because of the \0 in the end
    memcpy(*string, &buffer[pos], size);
    pos += size;
    return pos;

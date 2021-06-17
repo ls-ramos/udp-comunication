@@ -6,7 +6,7 @@ int readPeople(FILE *file, Person *peopleInFile){
     Person* person = malloc(sizeof(Person));
     int peopleCount = 0;
 
-    while(fread(buffer, MAX_PERSON, 1, file)){
+    while(fread(buffer, 1, MAX_PERSON, file)){
         deserializePerson(buffer, person);
 
         peopleInFile[peopleCount] = person[0];
@@ -28,7 +28,8 @@ int writePeople(Person* newPeople, int peopleCount, int append){
     for (int i = 0; i < peopleCount; i++){
         char buffer[MAX_PERSON];
         serializePerson(buffer,&newPeople[i]);
-        fwrite (buffer, MAX_PERSON, 1, file);    
+        
+        fwrite (buffer, 1,MAX_PERSON, file);    
     }
 
     fclose (file);
